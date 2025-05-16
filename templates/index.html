@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="no">
+<head><meta charset="utf-8"><title>Startside</title></head>
+<body>
+  <h1>Generer slides fra Lovsang.no</h1>
+  <form method="post" action="/generate">
+    <p>
+      <label>Lim inn én eller flere lovsang.no-URLer (én per linje):<br>
+      <textarea name="urls" rows="5" cols="60"></textarea></label>
+    </p>
+    <p>
+      <label>Maks linjer per slide:
+      <input type="number" name="max_lines" value="5" min="1"></label>
+    </p>
+    <button type="submit">Generer Markdown</button>
+  </form>
+</body>
+</html>

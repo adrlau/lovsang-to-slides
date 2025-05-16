@@ -1,0 +1,6 @@
+slides:
+  theme: white      # white background, black text
+
+revealjs:
+  transition: none # could work with slide, but prefer no motion.
+  backgroundTransition: none
