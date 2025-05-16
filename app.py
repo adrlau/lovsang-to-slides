@@ -110,41 +110,34 @@ def generate():
 
 @app.route("/build", methods=["POST"])
 def build():
-    md = request.form.get("markdown", "").strip()
+    md = request.form.get("markdown","").strip()
     if not md:
         abort(400, "Ingen markdown mottatt")
 
-    # Lag et midlertidig rotkatalog for build
+    # --- create temp dir & run mkslides as before ---
     tmp_root = tempfile.mkdtemp(prefix="mkslides_")
-    site_dir = os.path.join(tmp_root, "site")
-
-    # Skriv slides.md i tmp_root
-    md_file = os.path.join(tmp_root, "slides.md")
-    with open(md_file, "w", encoding="utf-8") as f:
+    site_dir  = os.path.join(tmp_root, "site")
+    md_file   = os.path.join(tmp_root, "slides.md")
+    with open(md_file,"w",encoding="utf-8") as f:
         f.write(md)
 
-    # Kjør mkslides build ... --site-dir site_dir
     try:
-        proc = subprocess.run(
-            ["mkslides", "build", md_file, "--site-dir", site_dir],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, check=True
+        subprocess.run(
+            ["mkslides","build",md_file,"--site-dir",site_dir],
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
-        current_app.logger.info("mkslides stdout:\n%s", proc.stdout)
     except subprocess.CalledProcessError as e:
-        # Rydd opp katalog på feil
         shutil.rmtree(tmp_root, ignore_errors=True)
-        return (
-            f"<h1>Build error</h1>"
-            f"<h2>Command</h2><pre>mkslides build {md_file} --site-dir {site_dir}</pre>"
-            f"<h2>stdout</h2><pre>{e.stdout}</pre>"
-            f"<h2>stderr</h2><pre>{e.stderr}</pre>"
-        ), 500
+        return f"<h1>Byggefeil</h1><pre>{e.stderr}</pre>", 500
 
-    # Lagre byggemappe og redirect til preview
     build_id = os.path.basename(tmp_root)
     builds[build_id] = site_dir
-    return redirect(f"/preview/{build_id}/")
+
+    # Instead of redirect → render editor again, with preview_url
+    preview_url = f"/preview/{build_id}/"
+    return render_template("editor.html",
+                           markdown=md,
+                           preview_url=preview_url)
 
 @app.route("/preview/<build_id>/", defaults={"path": ""})
 @app.route("/preview/<build_id>/<path:path>")
